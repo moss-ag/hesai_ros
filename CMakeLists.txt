@@ -144,7 +144,7 @@ add_subdirectory(src/driver/HesaiLidar_SDK_2.0)
 #                )
 
 
-find_package(CUDA)
+# find_package(CUDA)
 if(CUDA_FOUND)
   
   message(=============================================================)
