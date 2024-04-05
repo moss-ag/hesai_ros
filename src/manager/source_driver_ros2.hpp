@@ -89,6 +89,14 @@ protected:
 
 inline void SourceDriver::Init(const YAML::Node & config)
 {
+  const std::string project_path = (std::string) PROJECT_PATH;
+  auto replace_project_path = [&project_path](std::string & path) {
+      size_t pos = path.find("$PROJECT_PATH");
+      if (pos != std::string::npos) {
+        path.replace(pos, 13, project_path);
+      }
+    };
+
   YAML::Node driver_config = YamlSubNodeAbort(config, "driver");
   DriverParam driver_param;
   // input related
@@ -101,12 +109,16 @@ inline void SourceDriver::Init(const YAML::Node & config)
     driver_config, "group_address",
     driver_param.input_param.multicast_ip_address, "");
   YamlRead<std::string>(driver_config, "pcap_path", driver_param.input_param.pcap_path, "");
+  replace_project_path(driver_param.input_param.pcap_path);
   YamlRead<std::string>(
     driver_config, "firetimes_path", driver_param.input_param.firetimes_path,
     "");
+  replace_project_path(driver_param.input_param.firetimes_path);
+  std::cout << "firetimes_path: " << driver_param.input_param.firetimes_path << std::endl;
   YamlRead<std::string>(
     driver_config, "correction_file_path",
     driver_param.input_param.correction_file_path, "");
+  replace_project_path(driver_param.input_param.correction_file_path);
 
   // decoder related
   YamlRead<bool>(
