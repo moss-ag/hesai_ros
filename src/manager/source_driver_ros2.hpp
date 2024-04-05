@@ -124,6 +124,8 @@ inline void SourceDriver::Init(const YAML::Node & config)
   YamlRead<bool>(
     driver_config, "pcap_play_synchronization",
     driver_param.decoder_param.pcap_play_synchronization, true);
+  YamlRead<bool>(driver_config, "enable_distance_correction", 
+    driver_param.decoder_param.enable_distance_correction, false);
   YamlRead<float>(driver_config, "x", driver_param.decoder_param.transform_param.x, 0);
   YamlRead<float>(driver_config, "y", driver_param.decoder_param.transform_param.y, 0);
   YamlRead<float>(driver_config, "z", driver_param.decoder_param.transform_param.z, 0);
