@@ -67,11 +67,10 @@ protected:
   // Used to publish the original pcake through 'ros_send_packet_topic'
   void SendPacket(const UdpFrame_t & ros_msg, double timestamp);
   // Convert point clouds into ROS messages
-  sensor_msgs::msg::PointCloud2 ToRosMsg(
-    const LidarDecodedFrame<LidarPointXYZIRT> & frame,
-    const std::string & frame_id);
+  void PCLToROSMsg(
+    const LidarDecodedFrame<LidarPointXYZIRT> & frame);
   // Convert packets into ROS messages
-  hesai_ros_driver::msg::UdpFrame ToRosMsg(const UdpFrame_t & ros_msg, double timestamp);
+  void UDPFrameToROSMsg(const UdpFrame_t & ros_msg, double timestamp);
   #ifdef __CUDACC__
   std::shared_ptr<HesaiLidarSdkGpu<LidarPointXYZIRT>> driver_ptr_;
   #else
@@ -81,6 +80,8 @@ protected:
   rclcpp::Subscription<hesai_ros_driver::msg::UdpFrame>::SharedPtr pkt_sub_;
   rclcpp::Publisher<hesai_ros_driver::msg::UdpFrame>::SharedPtr pkt_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_;
+  sensor_msgs::msg::PointCloud2 pcl_ros_msg_;
+  hesai_ros_driver::msg::UdpFrame udp_frame_ros_msg_;
   //spin thread while recieve data from ROS topic
   boost::thread * subscription_spin_thread_;
 };
@@ -148,6 +149,30 @@ inline void SourceDriver::Init(const YAML::Node & config)
       config["ros"], "ros_send_point_cloud_topic", ros_send_point_topic,
       "hesai_points");
     pub_ = node_ptr_->create_publisher<sensor_msgs::msg::PointCloud2>(ros_send_point_topic, 100);
+
+    // Reserve 50K points
+    pcl_ros_msg_.data.reserve(sizeof(LidarPointXYZIRT) * 5e4);
+
+    // Add fields
+    pcl_ros_msg_.fields.reserve(6);
+    pcl_ros_msg_.fields.clear();
+    int offset = 0;
+    offset = addPointField(pcl_ros_msg_, "x", 1, sensor_msgs::msg::PointField::FLOAT32, offset);
+    offset = addPointField(pcl_ros_msg_, "y", 1, sensor_msgs::msg::PointField::FLOAT32, offset);
+    offset = addPointField(pcl_ros_msg_, "z", 1, sensor_msgs::msg::PointField::FLOAT32, offset);
+    offset = addPointField(
+      pcl_ros_msg_, "intensity", 1, sensor_msgs::msg::PointField::FLOAT32,
+      offset);
+    offset = addPointField(pcl_ros_msg_, "ring", 1, sensor_msgs::msg::PointField::UINT16, offset);
+    offset = addPointField(
+      pcl_ros_msg_, "timestamp", 1, sensor_msgs::msg::PointField::FLOAT64,
+      offset);
+
+    // Set header and assign other static values
+    pcl_ros_msg_.header.frame_id = frame_id_;
+    pcl_ros_msg_.height = 1;
+    pcl_ros_msg_.point_step = offset;
+    pcl_ros_msg_.is_dense = false;
   }
 
   if (send_packet_ros && driver_param.input_param.source_type != DATA_FROM_ROS_PACKET) {
@@ -158,6 +183,10 @@ inline void SourceDriver::Init(const YAML::Node & config)
     pkt_pub_ = node_ptr_->create_publisher<hesai_ros_driver::msg::UdpFrame>(
       ros_send_packet_topic,
       10);
+
+    udp_frame_ros_msg_.packets.reserve(1000);
+
+    udp_frame_ros_msg_.header.frame_id = frame_id_;
   }
 
   if (driver_param.input_param.source_type == DATA_FROM_ROS_PACKET) {
@@ -211,45 +240,31 @@ inline void SourceDriver::Stop()
 
 inline void SourceDriver::SendPacket(const UdpFrame_t & msg, double timestamp)
 {
-  pkt_pub_->publish(ToRosMsg(msg, timestamp));
+  UDPFrameToROSMsg(msg, timestamp);
+  pkt_pub_->publish(udp_frame_ros_msg_);
 }
 
 inline void SourceDriver::SendPointCloud(const LidarDecodedFrame<LidarPointXYZIRT> & msg)
 {
-  pub_->publish(ToRosMsg(msg, frame_id_));
+  PCLToROSMsg(msg);
+  pub_->publish(pcl_ros_msg_);
 }
 
-inline sensor_msgs::msg::PointCloud2 SourceDriver::ToRosMsg(
-  const LidarDecodedFrame<LidarPointXYZIRT> & frame, const std::string & frame_id)
+inline void SourceDriver::PCLToROSMsg(
+  const LidarDecodedFrame<LidarPointXYZIRT> & frame)
 {
-  sensor_msgs::msg::PointCloud2 ros_msg;
+  pcl_ros_msg_.width = frame.points_num;
+  pcl_ros_msg_.row_step = pcl_ros_msg_.width * pcl_ros_msg_.point_step;
 
-  int fields = 6;
-  ros_msg.fields.clear();
-  ros_msg.fields.reserve(fields);
-  ros_msg.width = frame.points_num;
-  ros_msg.height = 1;
+  pcl_ros_msg_.data.clear();
+  pcl_ros_msg_.data.resize(frame.points_num * pcl_ros_msg_.point_step);
 
-  int offset = 0;
-  offset = addPointField(ros_msg, "x", 1, sensor_msgs::msg::PointField::FLOAT32, offset);
-  offset = addPointField(ros_msg, "y", 1, sensor_msgs::msg::PointField::FLOAT32, offset);
-  offset = addPointField(ros_msg, "z", 1, sensor_msgs::msg::PointField::FLOAT32, offset);
-  offset = addPointField(ros_msg, "intensity", 1, sensor_msgs::msg::PointField::FLOAT32, offset);
-  offset = addPointField(ros_msg, "ring", 1, sensor_msgs::msg::PointField::UINT16, offset);
-  offset = addPointField(ros_msg, "timestamp", 1, sensor_msgs::msg::PointField::FLOAT64, offset);
-
-
-  ros_msg.point_step = offset;
-  ros_msg.row_step = ros_msg.width * ros_msg.point_step;
-  ros_msg.is_dense = false;
-  ros_msg.data.resize(frame.points_num * ros_msg.point_step);
-
-  sensor_msgs::PointCloud2Iterator<float> iter_x_(ros_msg, "x");
-  sensor_msgs::PointCloud2Iterator<float> iter_y_(ros_msg, "y");
-  sensor_msgs::PointCloud2Iterator<float> iter_z_(ros_msg, "z");
-  sensor_msgs::PointCloud2Iterator<float> iter_intensity_(ros_msg, "intensity");
-  sensor_msgs::PointCloud2Iterator<uint16_t> iter_ring_(ros_msg, "ring");
-  sensor_msgs::PointCloud2Iterator<double> iter_timestamp_(ros_msg, "timestamp");
+  sensor_msgs::PointCloud2Iterator<float> iter_x_(pcl_ros_msg_, "x");
+  sensor_msgs::PointCloud2Iterator<float> iter_y_(pcl_ros_msg_, "y");
+  sensor_msgs::PointCloud2Iterator<float> iter_z_(pcl_ros_msg_, "z");
+  sensor_msgs::PointCloud2Iterator<float> iter_intensity_(pcl_ros_msg_, "intensity");
+  sensor_msgs::PointCloud2Iterator<uint16_t> iter_ring_(pcl_ros_msg_, "ring");
+  sensor_msgs::PointCloud2Iterator<double> iter_timestamp_(pcl_ros_msg_, "timestamp");
 
   for (size_t i = 0; i < frame.points_num; i++) {
     LidarPointXYZIRT point = frame.points[i];
@@ -266,34 +281,34 @@ inline sensor_msgs::msg::PointCloud2 SourceDriver::ToRosMsg(
     ++iter_ring_;
     ++iter_timestamp_;
   }
-  printf(
+  RCLCPP_DEBUG(
+    node_ptr_->get_logger(),
     "frame:%d points:%u packet:%d start time:%lf end time:%lf\n", frame.frame_index,
     frame.points_num, frame.packet_num, frame.points[0].timestamp,
     frame.points[frame.points_num - 1].timestamp);
 
-  ros_msg.header.stamp.sec = (uint32_t)floor(frame.points[0].timestamp);
-  ros_msg.header.stamp.nanosec =
-    (uint32_t)round((frame.points[0].timestamp - ros_msg.header.stamp.sec) * 1e9);
-  ros_msg.header.frame_id = frame_id_;
-  return ros_msg;
+  pcl_ros_msg_.header.stamp.sec = (uint32_t)floor(frame.points[0].timestamp);
+  pcl_ros_msg_.header.stamp.nanosec =
+    (uint32_t)round((frame.points[0].timestamp - pcl_ros_msg_.header.stamp.sec) * 1e9);
 }
 
-inline hesai_ros_driver::msg::UdpFrame SourceDriver::ToRosMsg(
-  const UdpFrame_t & ros_msg,
+inline void SourceDriver::UDPFrameToROSMsg(
+  const UdpFrame_t & msg,
   double timestamp)
 {
-  hesai_ros_driver::msg::UdpFrame rs_msg;
-  for (int i = 0; i < ros_msg.size(); i++) {
+  udp_frame_ros_msg_.packets.clear();
+
+  for (size_t i = 0; i < msg.size(); i++) {
     hesai_ros_driver::msg::UdpPacket rawpacket;
-    rawpacket.size = ros_msg[i].packet_len;
-    rawpacket.data.resize(ros_msg[i].packet_len);
-    memcpy(&rawpacket.data[0], &ros_msg[i].buffer[0], ros_msg[i].packet_len);
-    rs_msg.packets.push_back(rawpacket);
+    rawpacket.size = msg[i].packet_len;
+    rawpacket.data.resize(msg[i].packet_len);
+    memcpy(&rawpacket.data[0], &msg[i].buffer[0], msg[i].packet_len);
+    udp_frame_ros_msg_.packets.push_back(rawpacket);
   }
-  rs_msg.header.stamp.sec = (uint32_t)floor(timestamp);
-  rs_msg.header.stamp.nanosec = (uint32_t)round((timestamp - rs_msg.header.stamp.sec) * 1e9);
-  rs_msg.header.frame_id = frame_id_;
-  return rs_msg;
+
+  udp_frame_ros_msg_.header.stamp.sec = (uint32_t)floor(timestamp);
+  udp_frame_ros_msg_.header.stamp.nanosec = (uint32_t)round(
+    (timestamp - udp_frame_ros_msg_.header.stamp.sec) * 1e9);
 }
 
 inline void SourceDriver::RecievePacket(const hesai_ros_driver::msg::UdpFrame::SharedPtr msg)
