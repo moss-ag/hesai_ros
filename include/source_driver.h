@@ -21,49 +21,64 @@
   SUCHDAMAGE.
 ************************************************************************************************/
 
-/*
- * File: node_manager.cc
- * Author: Zhang Yu <zhangyu@hesaitech.com>
- * Description: ROS Node Manager
- * Created on June 12, 2023, 10:46 AM
- */
+#pragma once
 
-#include "manager/node_manager.h"
-void NodeManager::Init(const YAML::Node &config)
+#include <rclcpp/rclcpp.hpp>
+#include <sstream>
+#include <fstream>
+#include <memory>
+#include <chrono>
+#include <string>
+#include <functional>
+#include <hesai_ros_driver/msg/udp_frame.hpp>
+#include <hesai_ros_driver/msg/udp_packet.hpp>
+#include <sensor_msgs/point_cloud2_iterator.hpp>
+#include "params.hpp"
+#include "hesai_lidar_sdk.hpp"
+
+namespace hesai_ros
 {
-  YAML::Node lidar_config = YamlSubNodeAbort(config, "lidar");
-  for (uint8_t i = 0; i < lidar_config.size(); ++i)
+
+class SourceDriver
+{
+public:
+  SourceDriver();
+
+  ~SourceDriver();
+
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface()
   {
-    std::shared_ptr<SourceDriver> source;
-    source = std::make_shared<SourceDriver>(SourceType::DATA_FROM_LIDAR);
-    source->Init(lidar_config[i]);
-    sources_driver_.emplace_back(source);
+    return node_->get_node_base_interface();
   }
-}
 
-void NodeManager::Start()
-{
-  for (auto &iter : sources_driver_)
-  {
-    if (iter != nullptr)
-    {
-      iter->Start();
-    }
-  }
-}
+private:
+  std::string get_full_path(std::string filename);
 
-void NodeManager::Stop()
-{
-  for (auto &iter : sources_driver_)
-  {
-    if (iter != nullptr)
-    {
-      iter->Stop();
-    }
-  }
-}
+  DriverParam set_params();
 
-NodeManager::~NodeManager()
-{
-  Stop();
-}
+  void setup_pointcloud_publisher();
+  
+  void setup_packet_publisher();
+
+  void packet_callback(const hesai_ros_driver::msg::UdpFrame::SharedPtr msg);
+  
+  void publish_pointcloud(const LidarDecodedFrame<LidarPointXYZIRT> & frame);
+
+  void publish_packet(const UdpFrame_t & ros_msg, double timestamp);
+
+  std::shared_ptr<rclcpp::Node> node_;
+  
+  std::shared_ptr<HesaiLidarSdk<LidarPointXYZIRT>> lidar_driver_;
+
+  std::shared_ptr<hesai_ros::ParamListener> param_listener_;
+  hesai_ros::Params params_;
+
+  rclcpp::Subscription<hesai_ros_driver::msg::UdpFrame>::SharedPtr pkt_sub_;
+  rclcpp::Publisher<hesai_ros_driver::msg::UdpFrame>::SharedPtr pkt_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_;
+
+  sensor_msgs::msg::PointCloud2 pcl_ros_msg_;
+  hesai_ros_driver::msg::UdpFrame udp_frame_ros_msg_;
+};
+
+}  // namespace hesai_ros

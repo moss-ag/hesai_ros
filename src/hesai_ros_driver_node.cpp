@@ -21,35 +21,18 @@
   SUCHDAMAGE.
 ************************************************************************************************/
 
-/*
- * File: node_manager.h
- * Author: Zhang Yu <zhangyu@hesaitech.com>
- * Description: ROS Node Manager
- * Created on June 12, 2023, 10:46 AM
- */
+#include <rclcpp/rclcpp.hpp>
 
-#pragma once
+#include "source_driver.h"
 
-#include "utility/yaml_reader.hpp"
-#ifdef ROS_FOUND
-#include "source_driver_ros1.hpp"
-#elif ROS2_FOUND
-#include "source_driver_ros2.hpp"
-#endif
 
-class NodeManager
+int main(int argc, char ** argv)
 {
-public:
-  // Initialize ROS nodes based on configuration files
-  void Init(const YAML::Node & config);
-  // Start working
-  void Start();
-  // Stop working
-  void Stop();
+  rclcpp::init(argc, argv);
 
-  ~NodeManager();
-  NodeManager() = default;
+  auto driver = std::make_shared<hesai_ros::SourceDriver>();
+  
+  rclcpp::spin(driver->get_node_base_interface());
 
-private:
-  std::vector<SourceDriver::Ptr> sources_driver_;
-};
+  return 0;
+}

@@ -1,0 +1,24 @@
+
+hesai_ros_node:
+  ros__parameters:
+      udp_port: 2368
+      ptc_port: 9347
+      host_ip_address: 192.168.1.100
+      device_ip_address: 192.168.1.201
+      correction_file_path: "package://hesai_ros_driver/correction/pandar_xt32_angle_correction.csv"
+      firetimes_path: "package://hesai_ros_driver/correction/pandar_xt32_firetime_correction.csv"
+      enable_distance_correction: true
+      source_type: 1
+      transform:
+        x: 0
+        y: 0
+        z: 0
+        roll: 0
+        pitch: 0
+        yaw: 0.0
+      frame_id: "lidar_link"
+      topics:
+        packet: "/lidar_packets"
+        point_cloud: "/points"
+      publish_packet: false
+      publish_pointcloud: true

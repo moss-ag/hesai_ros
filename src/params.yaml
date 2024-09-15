@@ -1,0 +1,70 @@
+hesai_ros:
+  pcap_play_synchronization:
+    type: bool
+    default_value: true
+  udp_port:
+    type: int
+    default_value: 2368
+  ptc_port:
+    type: int
+    default_value: 9347
+  host_ip_address:
+    type: string
+    default_value: "192.168.1.100"
+  device_ip_address:
+    type: string
+    default_value: "192.168.1.201"
+  pcap_path:
+    type: string
+    default_value: ""
+  correction_path:
+    type: string
+    default_value: "package://hesai_ros_driver/correction/pandar_xt32_angle_correction.csv"
+  firetimes_path:
+    type: string
+    default_value: "package://hesai_ros_driver/correction/pandar_xt32_firetime_correction.csv"
+  enable_distance_correction:
+    type: bool
+    default_value: true
+    description: "Enable distance correction to account for offset between sensor origin and laser emitter/receiver"
+  source_type:
+    type: int
+    default_value: 1 # 1: real-time lidar connection, 2: pcap, 3: packet rosbag
+  frame_start_azimuth:
+    type: int
+    default_value: -1 # Frame azimuth for Pandar128, range from 1 to 359, set it less than 0 if you do not want to use it.
+  transform:
+    x:
+      type: double
+      default_value: 0
+    y:
+      type: double
+      default_value: 0
+    z:
+      type: double
+      default_value: 0
+    roll:
+      type: double
+      default_value: 0
+    pitch:
+      type: double
+      default_value: 0
+    yaw:
+      type: double
+      default_value: 0
+  frame_id:
+    type: string
+    default_value: "lidar_link"
+  topics:
+    packet:
+      type: string
+      default_value: "/lidar_packets"
+    pointcloud:
+      type: string
+      default_value: "/points"
+  publish_packet:
+    type: bool
+    default_value: false
+  publish_pointcloud:
+    type: bool
+    default_value: true
