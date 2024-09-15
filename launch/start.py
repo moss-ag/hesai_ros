@@ -21,12 +21,10 @@ def generate_launch_description():
     rviz_config = PathJoinSubstitution([current_pkg, 'rviz', 'rviz2.rviz'])
 
     hesai_node = Node(
-        namespace='hesai_ros_driver',
         package='hesai_ros_driver',
         executable='hesai_ros_driver_node',
         output='screen',
         parameters=[ParameterFile(LaunchConfiguration('params_file'))],
-        # prefix=['xterm -e gdb -ex run --args'],
     )
     ld.add_action(hesai_node)
     

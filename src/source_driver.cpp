@@ -8,7 +8,7 @@ namespace hesai_ros
 {
 
 SourceDriver::SourceDriver(): 
-node_(std::make_shared<rclcpp::Node>("hesai_ros_driver_node")),
+node_(std::make_shared<rclcpp::Node>("hesai_node")),
 lidar_driver_(std::make_shared<HesaiLidarSdk<LidarPointXYZIRT>>())
 {
   param_listener_ = std::make_shared<hesai_ros::ParamListener>(

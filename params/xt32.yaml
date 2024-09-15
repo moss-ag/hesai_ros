@@ -1,5 +1,5 @@
 
-hesai_ros_node:
+hesai_node:
   ros__parameters:
       udp_port: 2368
       ptc_port: 9347
@@ -10,11 +10,11 @@ hesai_ros_node:
       enable_distance_correction: true
       source_type: 1
       transform:
-        x: 0
-        y: 0
-        z: 0
-        roll: 0
-        pitch: 0
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        roll: 0.0
+        pitch: 0.0
         yaw: 0.0
       frame_id: "lidar_link"
       topics:
