@@ -57,12 +57,12 @@ add_subdirectory(3rdparty/HesaiLidar_SDK_2.0)
 # Build Setup
 #========================
 
-add_executable(hesai_ros_driver_node
-  src/hesai_ros_driver_node.cpp
+add_executable(hesai_node
+  src/hesai_node.cpp
   src/source_driver.cpp
 )
 
-target_include_directories(hesai_ros_driver_node PRIVATE
+target_include_directories(hesai_node PRIVATE
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
   3rdparty/HesaiLidar_SDK_2.0/
@@ -87,7 +87,7 @@ target_include_directories(hesai_ros_driver_node PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_link_libraries(hesai_ros_driver_node                   
+target_link_libraries(hesai_node                   
   ${YAML_CPP_LIBRARIES}
   ${Boost_LIBRARIES}
   params
@@ -98,7 +98,7 @@ target_link_libraries(hesai_ros_driver_node
   log_lib
 )   
 
-ament_target_dependencies(hesai_ros_driver_node 
+ament_target_dependencies(hesai_node 
   "ament_index_cpp"
   "rcl_interfaces"
   "rclcpp" 
@@ -106,10 +106,10 @@ ament_target_dependencies(hesai_ros_driver_node
   "std_msgs" 
   "sensor_msgs" 
 )
-rosidl_target_interfaces(hesai_ros_driver_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+rosidl_target_interfaces(hesai_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 install(TARGETS
-  hesai_ros_driver_node
+  hesai_node
   DESTINATION lib/${PROJECT_NAME})
 
 install(TARGETS

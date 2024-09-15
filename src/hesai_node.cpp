@@ -30,6 +30,17 @@ int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
 
+  sched_param sch;
+  sch.sched_priority = 50;
+  if (sched_setscheduler(0, SCHED_FIFO, &sch) == -1) {
+    std::string errmsg(
+      "Cannot set as real-time thread. Users must set:\n"
+      "* hard rtprio 99\n"
+      "* soft rtprio 99\n"
+      "in /etc/security/limits.conf to enable realtime prioritization! \nError: ");
+    throw std::runtime_error(errmsg + std::strerror(errno));
+  }
+
   auto driver = std::make_shared<hesai_ros::SourceDriver>();
   
   rclcpp::spin(driver->get_node_base_interface());
