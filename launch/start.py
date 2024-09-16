@@ -22,7 +22,7 @@ def generate_launch_description():
 
     hesai_node = Node(
         package='hesai_ros_driver',
-        executable='hesai_ros_driver_node',
+        executable='hesai_node',
         output='screen',
         parameters=[ParameterFile(LaunchConfiguration('params_file'))],
     )
