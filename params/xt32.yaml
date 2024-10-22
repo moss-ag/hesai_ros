@@ -7,8 +7,13 @@ hesai_node:
       device_ip_address: 192.168.1.201
       correction_file_path: "package://hesai_ros_driver/correction/pandar_xt32_angle_correction.csv"
       firetimes_path: "package://hesai_ros_driver/correction/pandar_xt32_firetime_correction.csv"
-      enable_distance_correction: true
+      lidar_type: "PandarXT32"
+      distance_correction_lidar_type: "PandarXT32M1"
       source_type: 1
+      standby_mode: 0
+      speed: 1200
+      fov_start: -1
+      fov_end: -1
       transform:
         x: 0.0
         y: 0.0
@@ -22,3 +27,4 @@ hesai_node:
         point_cloud: "/points"
       publish_packet: false
       publish_pointcloud: true
+      enable_packet_loss_tool: false

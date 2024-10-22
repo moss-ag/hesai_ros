@@ -48,6 +48,10 @@ DriverParam SourceDriver::set_params()
 {
   DriverParam driver_param;
 
+  driver_param.frame_id = params_.frame_id;
+  driver_param.lidar_type = params_.lidar_type;
+  driver_param.log_path = "./hesai_lidar.log";
+
   driver_param.input_param.udp_port = params_.udp_port;
   driver_param.input_param.ptc_port = params_.ptc_port;
   driver_param.input_param.host_ip_address = params_.host_ip_address;
@@ -56,18 +60,24 @@ DriverParam SourceDriver::set_params()
   driver_param.input_param.pcap_path = get_full_path(params_.pcap_path);
   driver_param.input_param.correction_file_path = get_full_path(params_.correction_path);
   driver_param.input_param.firetimes_path = get_full_path(params_.firetimes_path);
-  
+  driver_param.input_param.source_type = SourceType(params_.source_type);
+  driver_param.input_param.standby_mode = params_.standby_mode;
+  driver_param.input_param.speed = params_.speed;
+
   driver_param.decoder_param.enable_parser_thread = true;
-  driver_param.decoder_param.enable_distance_correction = params_.enable_distance_correction;
   driver_param.decoder_param.pcap_play_synchronization = params_.pcap_play_synchronization;
+  driver_param.decoder_param.frame_start_azimuth = params_.frame_start_azimuth;
+  driver_param.decoder_param.enable_packet_loss_tool = params_.enable_packet_loss_tool;
+  driver_param.decoder_param.fov_start = params_.fov_start;
+  driver_param.decoder_param.fov_end = params_.fov_end;
+  driver_param.decoder_param.distance_correction_lidar_type = params_.distance_correction_lidar_type;
+
   driver_param.decoder_param.transform_param.x = params_.transform.x;
   driver_param.decoder_param.transform_param.y = params_.transform.y;
   driver_param.decoder_param.transform_param.z = params_.transform.z;
   driver_param.decoder_param.transform_param.roll = params_.transform.roll;
   driver_param.decoder_param.transform_param.pitch = params_.transform.pitch;
   driver_param.decoder_param.transform_param.yaw = params_.transform.yaw;
-  driver_param.decoder_param.frame_start_azimuth = params_.frame_start_azimuth;
-  driver_param.input_param.source_type = SourceType(params_.source_type);
 
   if (params_.source_type == DATA_FROM_ROS_PACKET)
   {

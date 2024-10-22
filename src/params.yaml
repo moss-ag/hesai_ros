@@ -14,6 +14,9 @@ hesai_ros:
   device_ip_address:
     type: string
     default_value: "192.168.1.201"
+  group_address:
+    type: string
+    default_value: "255.255.255.255"
   pcap_path:
     type: string
     default_value: ""
@@ -23,16 +26,40 @@ hesai_ros:
   firetimes_path:
     type: string
     default_value: "package://hesai_ros_driver/correction/pandar_xt32_firetime_correction.csv"
-  enable_distance_correction:
-    type: bool
-    default_value: true
-    description: "Enable distance correction to account for offset between sensor origin and laser emitter/receiver"
+  lidar_type:
+    type: string
+    default_value: ""
+    validation:
+      one_of<>: [["AT128", "AT128E2X", "AT128E3X", "Pandar128E3X", "Pandar128", "Pandar40S", "Pandar40E3X", "Pandar60S", "Pandar64E3X", "Pandar90", "Pandar90E3X", "PandarXT", "PandarXT16", "PandarXT-16", "PandarXT32", "PandarXT-32", "PandarXTM", "XT32M2X", "PandarQT", "PandarQT128", "QT128C2X", "Pandar64", "Pandar40", "Pandar40P", "PandarFT120", "FT120C1X", "ET25-E1X", "ET25-E2X", "ET25", "ET", "ATX"]]
+    description: "LiDAR type"
+  distance_correction_lidar_type:
+    type: string
+    default_value: ""
+    validation:
+      one_of<>: [["Pandar128E4X", "OT", "Pandar128E3X", "Pandar64E3X", "Pandar40E3X", "Pandar90E3X", "Pandar64E2X", "Pandar40E2X", "PandarQT", "QT128C2X", "PandarXT32M1", "PandarXT16M1", "PandarXT32M2X", "XTM"]]
+    description: "LiDAR type for which distance correction is to be applied"
   source_type:
     type: int
     default_value: 1 # 1: real-time lidar connection, 2: pcap, 3: packet rosbag
+  standby_mode:
+    type: int
+    default_value: -1 # -1: prior value, 0: normal, 1: standby
+    validation:
+      one_of<>: [[-1, 0, 1]]
+  speed:
+    type: int
+    default_value: -1 # -1: prior value, 300: 300rpm, 600: 600rpm, 1200: 1200rpm
+    validation:
+      one_of<>: [[-1, 300, 600, 1200]]
   frame_start_azimuth:
     type: int
     default_value: -1 # Frame azimuth for Pandar128, range from 1 to 359, set it less than 0 if you do not want to use it.
+  fov_start:
+    type: int
+    default_value: -1 # Field of view start angle, range from 1 to 359, set it less than 0 if you do not want to use it.
+  fov_end:
+    type: int
+    default_value: -1 # Field of view end angle, range from 1 to 359, set it less than 0 if you do not want to use it.
   transform:
     x:
       type: double
@@ -68,3 +95,6 @@ hesai_ros:
   publish_pointcloud:
     type: bool
     default_value: true
+  enable_packet_loss_tool:
+    type: bool
+    default_value: false
