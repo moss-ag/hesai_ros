@@ -29,17 +29,18 @@ add_compile_options(-Wall)
 find_package(ament_cmake REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(backward_ros REQUIRED)
+find_package(builtin_interfaces REQUIRED)
+find_package(diagnostic_msgs REQUIRED)
+find_package(diagnostic_updater REQUIRED)
 find_package(generate_parameter_library REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(std_msgs REQUIRED)  
 find_package(rosidl_typesupport_c REQUIRED) 
 find_package(rosidl_default_generators REQUIRED)
-find_package(builtin_interfaces REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/LidarStatus.msg"
   "msg/UdpPacket.msg"
   "msg/UdpFrame.msg"
   DEPENDENCIES builtin_interfaces std_msgs
@@ -100,12 +101,15 @@ target_link_libraries(hesai_node
 )   
 
 ament_target_dependencies(hesai_node 
-  "ament_index_cpp"
-  "rcl_interfaces"
-  "rclcpp" 
-  "rcutils"
-  "std_msgs" 
-  "sensor_msgs" 
+  ament_index_cpp
+  diagnostic_msgs
+  diagnostic_updater
+  rcl_interfaces
+  rclcpp 
+  rcutils
+  std_msgs
+  sensor_msgs
+  std_srvs
 )
 rosidl_target_interfaces(hesai_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
