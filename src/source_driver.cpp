@@ -285,6 +285,8 @@ void SourceDriver::set_state_callback(
 
     RCLCPP_INFO(node_->get_logger(), "Lidar driver deactivated");
   }
+
+  response->data = true;
 }
 
 } // namespace hesai_ros
