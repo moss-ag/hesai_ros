@@ -32,6 +32,7 @@
 #include <functional>
 #include <hesai_ros_driver/msg/udp_frame.hpp>
 #include <hesai_ros_driver/msg/udp_packet.hpp>
+#include <hesai_ros_driver/msg/lidar_status.hpp>
 #include <sensor_msgs/point_cloud2_iterator.hpp>
 #include "params.hpp"
 #include "hesai_lidar_sdk.hpp"
@@ -60,11 +61,15 @@ private:
   
   void setup_packet_publisher();
 
+  void setup_status_publisher();
+
   void packet_callback(const hesai_ros_driver::msg::UdpFrame::SharedPtr msg);
   
   void publish_pointcloud(const LidarDecodedFrame<LidarPointXYZIRT> & frame);
 
   void publish_packet(const UdpFrame_t & ros_msg, double timestamp);
+
+  void publish_lidar_status(const hesai::lidar::LidarStatus & status);
 
   std::shared_ptr<rclcpp::Node> node_;
   
@@ -75,7 +80,8 @@ private:
 
   rclcpp::Subscription<hesai_ros_driver::msg::UdpFrame>::SharedPtr pkt_sub_;
   rclcpp::Publisher<hesai_ros_driver::msg::UdpFrame>::SharedPtr pkt_pub_;
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
+  rclcpp::Publisher<hesai_ros_driver::msg::LidarStatus>::SharedPtr status_pub_;
 
   sensor_msgs::msg::PointCloud2 pcl_ros_msg_;
   hesai_ros_driver::msg::UdpFrame udp_frame_ros_msg_;

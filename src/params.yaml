@@ -85,14 +85,20 @@ hesai_ros:
   topics:
     packet:
       type: string
-      default_value: "/lidar_packets"
+      default_value: "/lidar/packets"
     pointcloud:
       type: string
       default_value: "/points"
+    status:
+      type: string
+      default_value: "/lidar/status"
   publish_packet:
     type: bool
     default_value: false
   publish_pointcloud:
+    type: bool
+    default_value: true
+  publish_status:
     type: bool
     default_value: true
   enable_packet_loss_tool:

@@ -23,8 +23,10 @@ hesai_node:
         yaw: 0.0
       frame_id: "lidar_link"
       topics:
-        packet: "/lidar_packets"
+        packet: "/lidar/packets"
         point_cloud: "/points"
+        status: "/lidar/status"
       publish_packet: false
       publish_pointcloud: true
+      publish_status: true
       enable_packet_loss_tool: false

@@ -17,6 +17,7 @@ lidar_driver_(std::make_shared<HesaiLidarSdk<LidarPointXYZIRT>>())
 
   setup_packet_publisher();
   setup_pointcloud_publisher();
+  setup_status_publisher();
 
   DriverParam driver_param = set_params();
   if (!lidar_driver_->Init(driver_param)) {
@@ -93,7 +94,7 @@ void SourceDriver::setup_pointcloud_publisher() {
     return;
   }
 
-  pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>(params_.topics.pointcloud, 100);
+  cloud_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>(params_.topics.pointcloud, 100);
 
   // Reserve 50K points
   pcl_ros_msg_.data.reserve(sizeof(LidarPointXYZIRT) * 5e4);
@@ -151,6 +152,20 @@ void SourceDriver::setup_packet_publisher()
   }
 }
 
+void SourceDriver::setup_status_publisher()
+{
+  if (params_.publish_status) {
+    status_pub_ = node_->create_publisher<hesai_ros_driver::msg::LidarStatus>(
+      params_.topics.status,
+      10);
+
+    lidar_driver_->RegRecvCallback(
+      std::bind(
+        &SourceDriver::publish_lidar_status, this,
+        std::placeholders::_1));
+  }
+}
+
 void SourceDriver::publish_pointcloud(const LidarDecodedFrame<LidarPointXYZIRT> & frame)
 {
   pcl_ros_msg_.width = frame.points_num;
@@ -186,7 +201,7 @@ void SourceDriver::publish_pointcloud(const LidarDecodedFrame<LidarPointXYZIRT> 
   pcl_ros_msg_.header.stamp.nanosec =
     (uint32_t) round((frame.points[0].timestamp - pcl_ros_msg_.header.stamp.sec) * 1e9);
   
-  pub_->publish(pcl_ros_msg_);
+  cloud_pub_->publish(pcl_ros_msg_);
 }
 
 void SourceDriver::publish_packet(const UdpFrame_t & msg, double timestamp)
@@ -210,11 +225,29 @@ void SourceDriver::publish_packet(const UdpFrame_t & msg, double timestamp)
 
 void SourceDriver::packet_callback(const hesai_ros_driver::msg::UdpFrame::SharedPtr msg)
 {
-  for (int i = 0; i < msg->packets.size(); i++) {
+  for (size_t i = 0; i < msg->packets.size(); i++) {
     lidar_driver_->lidar_ptr_->origin_packets_buffer_.emplace_back(
       &msg->packets[i].data[0],
       msg->packets[i].size);
   }
+}
+
+void SourceDriver::publish_lidar_status(const hesai::lidar::LidarStatus & status)
+{
+  hesai_ros_driver::msg::LidarStatus status_msg;
+  status_msg.system_uptime = status.system_uptime;
+  status_msg.motor_speed = status.motor_speed;
+  for (int i = 0; i < 8; ++i) {
+    status_msg.temperature[i] = status.temperature[i] / 100.0;
+  }
+  status_msg.gps_pps_lock = status.gps_pps_lock;
+  status_msg.gps_gprmc_status = status.gps_gprmc_status;
+  status_msg.startup_times = status.startup_times;
+  status_msg.total_operation_time = status.total_operation_time;
+  status_msg.ptp_status = status.ptp_status;
+  status_msg.ptp_offset = status.ptp_offset;
+
+  status_pub_->publish(status_msg);
 }
 
 } // namespace hesai_ros

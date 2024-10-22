@@ -39,6 +39,7 @@ find_package(builtin_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/LidarStatus.msg"
   "msg/UdpPacket.msg"
   "msg/UdpFrame.msg"
   DEPENDENCIES builtin_interfaces std_msgs
