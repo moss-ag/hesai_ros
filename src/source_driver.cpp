@@ -12,11 +12,12 @@ node_(std::make_shared<rclcpp::Node>("hesai_node")),
 lidar_driver_(std::make_shared<HesaiLidarSdk<LidarPointXYZIRT>>()),
 diagnostic_updater_(node_, 5.0)
 {
-  diagnostic_updater_.setHardwareID("Hesai LiDAR XT32");
-
   param_listener_ = std::make_shared<hesai_ros::ParamListener>(
   node_->get_node_parameters_interface());
   params_ = param_listener_->get_params();
+
+  const std::string hardware_id = "Hesai LiDAR" + params_.lidar_type;
+  diagnostic_updater_.setHardwareID(hardware_id);
 
   setup_set_state_service();
   setup_packet_publisher();

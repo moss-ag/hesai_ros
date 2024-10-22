@@ -86,11 +86,11 @@ private:
   
   std::shared_ptr<HesaiLidarSdk<LidarPointXYZIRT>> lidar_driver_;
 
-  diagnostic_updater::Updater diagnostic_updater_;
-  std::shared_ptr<diagnostic_updater::FunctionDiagnosticTask> status_task_;
-
   std::shared_ptr<hesai_ros::ParamListener> param_listener_;
   hesai_ros::Params params_;
+
+  diagnostic_updater::Updater diagnostic_updater_;
+  std::shared_ptr<diagnostic_updater::FunctionDiagnosticTask> status_task_;
 
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr set_state_service_;
 
