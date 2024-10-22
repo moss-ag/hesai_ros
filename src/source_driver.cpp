@@ -9,12 +9,14 @@ namespace hesai_ros
 
 SourceDriver::SourceDriver(): 
 node_(std::make_shared<rclcpp::Node>("hesai_node")),
-lidar_driver_(std::make_shared<HesaiLidarSdk<LidarPointXYZIRT>>())
+lidar_driver_(std::make_shared<HesaiLidarSdk<LidarPointXYZIRT>>()),
+updater_(node_)
 {
   param_listener_ = std::make_shared<hesai_ros::ParamListener>(
   node_->get_node_parameters_interface());
   params_ = param_listener_->get_params();
 
+  setup_set_state_service();
   setup_packet_publisher();
   setup_pointcloud_publisher();
   setup_status_publisher();
@@ -88,6 +90,13 @@ DriverParam SourceDriver::set_params()
   return driver_param;
 }
 
+void SourceDriver::setup_toggle_state_service() {
+  trigger_service_ = node_->create_service<std_srvs::srv::Trigger>(
+    "set_hesai_driver_state",
+    std::bind(&SourceDriver::toggle_state_callback, this, std::placeholders::_1, std::placeholders::_2)
+  );
+}
+
 void SourceDriver::setup_pointcloud_publisher() {
   if (!params_.publish_pointcloud)
   {
@@ -95,6 +104,12 @@ void SourceDriver::setup_pointcloud_publisher() {
   }
 
   cloud_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>(params_.topics.pointcloud, 100);
+
+  diagnosed_cloud_pub_ = std::make_shared<diagnostic_updater::DiagnosedPublisher<sensor_msgs::msg::PointCloud2>>(
+    cloud_pub_,
+    updater_,
+    diagnostic_updater::FrequencyStatusParam(&params_.diagnostics.cloud_min_freq, &params_.diagnostics.cloud_max_freq, 0, 10),
+    diagnostic_updater::TimeStampStatusParam(-1, 1));
 
   // Reserve 50K points
   pcl_ros_msg_.data.reserve(sizeof(LidarPointXYZIRT) * 5e4);
@@ -141,6 +156,12 @@ void SourceDriver::setup_packet_publisher()
     pkt_pub_ = node_->create_publisher<hesai_ros_driver::msg::UdpFrame>(
       params_.topics.packet,
       10);
+
+    diagnosed_pkt_pub_ = std::make_shared<diagnostic_updater::DiagnosedPublisher<hesai_ros_driver::msg::UdpFrame>>(
+      pkt_pub_,
+      updater_,
+      diagnostic_updater::FrequencyStatusParam(&params_.diagnostics.pkt_min_freq, &params_.diagnostics.pkt_max_freq, 0, 10),
+      diagnostic_updater::TimeStampStatusParam(-1, 1));
 
     udp_frame_ros_msg_.packets.reserve(1000);
     udp_frame_ros_msg_.header.frame_id = params_.frame_id;
@@ -200,8 +221,8 @@ void SourceDriver::publish_pointcloud(const LidarDecodedFrame<LidarPointXYZIRT> 
   pcl_ros_msg_.header.stamp.sec = (uint32_t) floor(frame.points[0].timestamp);
   pcl_ros_msg_.header.stamp.nanosec =
     (uint32_t) round((frame.points[0].timestamp - pcl_ros_msg_.header.stamp.sec) * 1e9);
-  
-  cloud_pub_->publish(pcl_ros_msg_);
+
+  diagnosed_cloud_pub_->publish(pcl_ros_msg_);
 }
 
 void SourceDriver::publish_packet(const UdpFrame_t & msg, double timestamp)
@@ -220,7 +241,7 @@ void SourceDriver::publish_packet(const UdpFrame_t & msg, double timestamp)
   udp_frame_ros_msg_.header.stamp.nanosec = (uint32_t)round(
     (timestamp - udp_frame_ros_msg_.header.stamp.sec) * 1e9);
 
-  pkt_pub_->publish(udp_frame_ros_msg_);
+  diagnosed_pkt_pub_->publish(udp_frame_ros_msg_);
 }
 
 void SourceDriver::packet_callback(const hesai_ros_driver::msg::UdpFrame::SharedPtr msg)
@@ -248,6 +269,22 @@ void SourceDriver::publish_lidar_status(const hesai::lidar::LidarStatus & status
   status_msg.ptp_offset = status.ptp_offset;
 
   status_pub_->publish(status_msg);
+}
+
+void SourceDriver::set_state_callback(
+  const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
+  std::shared_ptr<std_srvs::srv::SetBool::Response> response
+)
+{
+  if (request->data) {
+    lidar_driver_->lidar_ptr_->ptc_client_->SetStandbyMode(0);
+
+    RCLCPP_INFO(node_->get_logger(), "Lidar driver activated");
+  } else {
+    lidar_driver_->lidar_ptr_->ptc_client_->SetStandbyMode(1);
+
+    RCLCPP_INFO(node_->get_logger(), "Lidar driver deactivated");
+  }
 }
 
 } // namespace hesai_ros

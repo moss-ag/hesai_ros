@@ -36,6 +36,9 @@
 #include <sensor_msgs/point_cloud2_iterator.hpp>
 #include "params.hpp"
 #include "hesai_lidar_sdk.hpp"
+#include "std_srvs/srv/set_bool.hpp"
+#include "diagnostic_updater/diagnostic_updater.hpp"
+#include "diagnostic_updater/publisher.hpp"
 
 namespace hesai_ros
 {
@@ -57,6 +60,8 @@ private:
 
   DriverParam set_params();
 
+  void setup_set_state_service();
+
   void setup_pointcloud_publisher();
   
   void setup_packet_publisher();
@@ -71,17 +76,29 @@ private:
 
   void publish_lidar_status(const hesai::lidar::LidarStatus & status);
 
+  void set_state_callback(
+    const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
+    std::shared_ptr<std_srvs::srv::SetBool::Response> response
+  );
+
   std::shared_ptr<rclcpp::Node> node_;
+
+  diagnostic_updater::Updater updater_;
   
   std::shared_ptr<HesaiLidarSdk<LidarPointXYZIRT>> lidar_driver_;
 
   std::shared_ptr<hesai_ros::ParamListener> param_listener_;
   hesai_ros::Params params_;
 
+  rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr set_state_service_;
+
   rclcpp::Subscription<hesai_ros_driver::msg::UdpFrame>::SharedPtr pkt_sub_;
   rclcpp::Publisher<hesai_ros_driver::msg::UdpFrame>::SharedPtr pkt_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
   rclcpp::Publisher<hesai_ros_driver::msg::LidarStatus>::SharedPtr status_pub_;
+
+  std::shared_ptr<diagnostic_updater::DiagnosedPublisher<hesai_ros_driver::msg::UdpFrame>> diagnosed_pkt_pub_;
+  std::shared_ptr<diagnostic_updater::DiagnosedPublisher<sensor_msgs::msg::PointCloud2>> diagnosed_cloud_pub_;
 
   sensor_msgs::msg::PointCloud2 pcl_ros_msg_;
   hesai_ros_driver::msg::UdpFrame udp_frame_ros_msg_;

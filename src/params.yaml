@@ -104,3 +104,20 @@ hesai_ros:
   enable_packet_loss_tool:
     type: bool
     default_value: false
+  diagnostics:
+    pkt_min_freq:
+      type: double
+      default_value: 18.0
+      read_only: true
+    pkt_max_freq:
+      type: double
+      default_value: 22.0
+      read_only: true
+    cloud_min_freq:
+      type: double
+      default_value: 18.0
+      read_only: true
+    cloud_max_freq:
+      type: double
+      default_value: 22.0
+      read_only: true
