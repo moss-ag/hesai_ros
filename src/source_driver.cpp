@@ -91,9 +91,9 @@ DriverParam SourceDriver::set_params()
 }
 
 void SourceDriver::setup_set_state_service() {
-  trigger_service_ = node_->create_service<std_srvs::srv::Trigger>(
+  set_state_service_ = node_->create_service<std_srvs::srv::SetBool>(
     "set_hesai_driver_state",
-    std::bind(&SourceDriver::toggle_state_callback, this, std::placeholders::_1, std::placeholders::_2)
+    std::bind(&SourceDriver::set_state_callback, this, std::placeholders::_1, std::placeholders::_2)
   );
 }
 
