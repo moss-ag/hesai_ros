@@ -35,6 +35,9 @@ diagnostic_updater_(node_, 5.0)
 
 SourceDriver::~SourceDriver()
 {
+  std::cout << "Stopping LiDAR driver and setting to standby mode" << std::endl;
+  bool standby_status = set_standby_mode(true);
+  std::cout << "Standby status: " << std::boolalpha << standby_status << std::endl;
   lidar_driver_->Stop();
 }
 
@@ -242,22 +245,36 @@ void SourceDriver::packet_callback(const hesai_ros_driver::msg::UdpFrame::Shared
   }
 }
 
+bool SourceDriver::set_standby_mode(bool standby_state)
+{
+  bool ret = false;
+
+  RCLCPP_INFO(node_->get_logger(), "Setting LiDAR to %s mode", standby_state ? "standby" : "active");
+
+  if (lidar_driver_->lidar_ptr_ == nullptr || lidar_driver_->lidar_ptr_->ptc_client_ == nullptr) {
+    RCLCPP_ERROR(node_->get_logger(), "Failed to set standby mode, LiDAR is not running");
+    return false;
+  }
+
+  ret = !(lidar_driver_->lidar_ptr_->ptc_client_->SetStandbyMode(standby_state)); // 0 means success, so invert the return value
+
+  if (!ret)
+  {
+    RCLCPP_ERROR(node_->get_logger(), "Failed to set standby mode");
+  } else {
+    RCLCPP_INFO(node_->get_logger(), "LiDAR is in %s mode", standby_state ? "standby" : "active");
+  }
+
+  return ret;
+}
+
+
 void SourceDriver::set_state_callback(
   const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
   std::shared_ptr<std_srvs::srv::SetBool::Response> response
 )
 {
-  if (request->data) {
-    lidar_driver_->lidar_ptr_->ptc_client_->SetStandbyMode(0);
-
-    RCLCPP_INFO(node_->get_logger(), "Lidar driver activated");
-  } else {
-    lidar_driver_->lidar_ptr_->ptc_client_->SetStandbyMode(1);
-
-    RCLCPP_INFO(node_->get_logger(), "Lidar driver deactivated");
-  }
-
-  response->success = true;
+    response->success =  set_standby_mode(!request->data);
 }
 
 

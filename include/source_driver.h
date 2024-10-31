@@ -77,6 +77,8 @@ private:
 
   void publish_packet(const UdpFrame_t & ros_msg, double timestamp);
 
+  bool set_standby_mode(bool standby_state);
+
   void set_state_callback(
     const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
     std::shared_ptr<std_srvs::srv::SetBool::Response> response
