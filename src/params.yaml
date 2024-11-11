@@ -43,9 +43,9 @@ hesai_ros:
     default_value: 1 # 1: real-time lidar connection, 2: pcap, 3: packet rosbag
   standby_mode:
     type: int
-    default_value: -1 # -1: prior value, 0: normal, 1: standby
+    default_value: 0 # 0: normal, 1: standby
     validation:
-      one_of<>: [[-1, 0, 1]]
+      one_of<>: [[0, 1]]
   speed:
     type: int
     default_value: -1 # -1: prior value, 300: 300rpm, 600: 600rpm, 1200: 1200rpm

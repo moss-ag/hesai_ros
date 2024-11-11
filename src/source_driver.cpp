@@ -30,7 +30,17 @@ diagnostic_updater_(node_, 5.0)
     exit(-1);
   }
 
+  RCLCPP_INFO(node_->get_logger(), "Starting Hesai LiDAR driver");
+
   lidar_driver_->Start();
+
+  if (params_.source_type == 1) {
+    // Don't allow -1 prior mode, since if sensor is on standby before that LiDAR start methd blocks
+    if (params_.standby_mode == 1) {
+      set_standby_mode(true);
+    }
+  }
+  RCLCPP_INFO(node_->get_logger(), "Hesai LiDAR driver initialized");
 }
 
 SourceDriver::~SourceDriver()
@@ -70,7 +80,7 @@ DriverParam SourceDriver::set_params()
   driver_param.input_param.correction_file_path = get_full_path(params_.correction_path);
   driver_param.input_param.firetimes_path = get_full_path(params_.firetimes_path);
   driver_param.input_param.source_type = SourceType(params_.source_type);
-  driver_param.input_param.standby_mode = params_.standby_mode;
+  driver_param.input_param.standby_mode = 0; // Always start in active mode, else the lidar start method blocks
   driver_param.input_param.speed = params_.speed;
 
   driver_param.decoder_param.enable_parser_thread = true;
