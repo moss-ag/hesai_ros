@@ -3,8 +3,8 @@ hesai_node:
   ros__parameters:
       udp_port: 2368
       ptc_port: 9347
-      host_ip_address: 192.168.1.100
-      device_ip_address: 192.168.1.201
+      host_ip_address: 10.32.1.100
+      device_ip_address: 10.32.1.201
       correction_file_path: "package://hesai_ros_driver/correction/pandar_xt32_angle_correction.csv"
       firetimes_path: "package://hesai_ros_driver/correction/pandar_xt32_firetime_correction.csv"
       lidar_type: "PandarXT32"
