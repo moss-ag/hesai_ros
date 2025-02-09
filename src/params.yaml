@@ -36,7 +36,7 @@ hesai_ros:
     type: string
     default_value: ""
     validation:
-      one_of<>: [["Pandar128E4X", "OT", "Pandar128E3X", "Pandar64E3X", "Pandar40E3X", "Pandar90E3X", "Pandar64E2X", "Pandar40E2X", "PandarQT", "QT128C2X", "PandarXT32M1", "PandarXT16M1", "PandarXT32M2X", "XTM"]]
+      one_of<>: [["", "Pandar128E4X", "OT", "Pandar128E3X", "Pandar64E3X", "Pandar40E3X", "Pandar90E3X", "Pandar64E2X", "Pandar40E2X", "PandarQT", "QT128C2X", "PandarXT32M1", "PandarXT16M1", "PandarXT32M2X", "XTM"]]
     description: "LiDAR type for which distance correction is to be applied"
   source_type:
     type: int
