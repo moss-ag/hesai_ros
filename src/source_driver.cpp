@@ -10,7 +10,7 @@ namespace hesai_ros
 SourceDriver::SourceDriver(): 
 node_(std::make_shared<rclcpp::Node>("hesai_node")),
 lidar_driver_(std::make_shared<HesaiLidarSdk<LidarPointXYZIRT>>()),
-diagnostic_updater_(node_, 5.0)
+diagnostic_updater_(node_, 2.0)
 {
   param_listener_ = std::make_shared<hesai_ros::ParamListener>(
   node_->get_node_parameters_interface());
