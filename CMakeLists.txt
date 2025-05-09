@@ -5,9 +5,9 @@ project(hesai_ros_driver)
 #=======================================
 # Version information
 #=======================================
-set(VERSION_MAJOR 2)
+set(VERSION_MAJOR 1)
 set(VERSION_MINOR 0)
-set(VERSION_TINY  8)
+set(VERSION_TINY  1)
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/Version.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/Version.h"
